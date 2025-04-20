@@ -12,7 +12,7 @@ import (
 type SafeString string
 
 // isSafeString returns true if argument is a SafeString
-func isSafeString(value interface{}) bool {
+func isSafeString(value any) bool {
 	if _, ok := value.(SafeString); ok {
 		return true
 	}
@@ -20,7 +20,7 @@ func isSafeString(value interface{}) bool {
 }
 
 // Str returns string representation of any basic type value.
-func Str(value interface{}) string {
+func Str(value any) string {
 	return strValue(reflect.ValueOf(value))
 }
 
@@ -30,14 +30,14 @@ func strValue(value reflect.Value) string {
 
 	ival, ok := printableValue(value)
 	if !ok {
-		panic(fmt.Errorf("Can't print value: %q", value))
+		panic(fmt.Errorf("can't print value: %q", value))
 	}
 
 	val := reflect.ValueOf(ival)
 
 	switch val.Kind() {
 	case reflect.Array, reflect.Slice:
-		for i := 0; i < val.Len(); i++ {
+		for i := range val.Len() {
 			result += strValue(val.Index(i))
 		}
 	case reflect.Bool:
@@ -62,7 +62,7 @@ func strValue(value reflect.Value) string {
 // is best for a call to formatted printer.
 //
 // NOTE: borrowed from https://github.com/golang/go/tree/master/src/text/template/exec.go
-func printableValue(v reflect.Value) (interface{}, bool) {
+func printableValue(v reflect.Value) (any, bool) {
 	if v.Kind() == reflect.Ptr {
 		v, _ = indirect(v) // fmt.Fprint handles nil.
 	}
@@ -71,7 +71,7 @@ func printableValue(v reflect.Value) (interface{}, bool) {
 	}
 
 	if !v.Type().Implements(errorType) && !v.Type().Implements(fmtStringerType) {
-		if v.CanAddr() && (reflect.PtrTo(v.Type()).Implements(errorType) || reflect.PtrTo(v.Type()).Implements(fmtStringerType)) {
+		if v.CanAddr() && (reflect.PointerTo(v.Type()).Implements(errorType) || reflect.PointerTo(v.Type()).Implements(fmtStringerType)) {
 			v = v.Addr()
 		} else {
 			switch v.Kind() {

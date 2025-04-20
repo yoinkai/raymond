@@ -2,17 +2,18 @@ package raymond
 
 import (
 	"encoding/json"
-	"github.com/mailgun/raymond/v2/ast"
 	"strings"
+
+	"github.com/yoinkai/raymond/v2/ast"
 )
 
-type list []interface{}
+type list []any
 
-func (l *list) Add(item interface{}) {
+func (l *list) Add(item any) {
 	*l = append(*l, item)
 }
 
-func (l *list) Get() interface{} {
+func (l *list) Get() any {
 	return (*l)[0]
 }
 
@@ -20,19 +21,19 @@ func (l *list) Len() int {
 	return len(*l)
 }
 
-func newList(item interface{}) *list {
+func newList(item any) *list {
 	l := new(list)
 	l.Add(item)
 	return l
 }
 
 type JSONVisitor struct {
-	JSON map[string]interface{}
+	JSON map[string]any
 	ctx  *handlebarsContext
 }
 
 func newJSONVisitor() *JSONVisitor {
-	j := map[string]interface{}{}
+	j := map[string]any{}
 	v := &JSONVisitor{JSON: j, ctx: newHandlebarsContext()}
 	return v
 }
@@ -44,21 +45,21 @@ func ToJSON(node ast.Node) string {
 	return string(b)
 }
 
-func (v *JSONVisitor) VisitProgram(node *ast.Program) interface{} {
+func (v *JSONVisitor) VisitProgram(node *ast.Program) any {
 	for _, n := range node.Body {
 		n.Accept(v)
 	}
 	return v.JSON
 }
 
-func (v *JSONVisitor) VisitMustache(node *ast.MustacheStatement) interface{} {
+func (v *JSONVisitor) VisitMustache(node *ast.MustacheStatement) any {
 
 	node.Expression.Accept(v)
 
 	return nil
 }
 
-func (v *JSONVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
+func (v *JSONVisitor) VisitBlock(node *ast.BlockStatement) any {
 	var action string
 	fp := node.Expression.FieldPath()
 	if fp != nil {
@@ -75,7 +76,7 @@ func (v *JSONVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 		}
 		if node.Program != nil {
 			if len(node.Program.BlockParams) > 0 {
-				blockParams = append(node.Program.BlockParams)
+				blockParams = append(blockParams, node.Program.BlockParams...)
 			}
 		}
 		if action == "each" {
@@ -107,22 +108,22 @@ func (v *JSONVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 	return nil
 }
 
-func (v *JSONVisitor) VisitPartial(node *ast.PartialStatement) interface{} {
+func (v *JSONVisitor) VisitPartial(node *ast.PartialStatement) any {
 
 	return nil
 }
 
-func (v *JSONVisitor) VisitContent(node *ast.ContentStatement) interface{} {
+func (v *JSONVisitor) VisitContent(node *ast.ContentStatement) any {
 
 	return nil
 }
 
-func (v *JSONVisitor) VisitComment(node *ast.CommentStatement) interface{} {
+func (v *JSONVisitor) VisitComment(node *ast.CommentStatement) any {
 
 	return nil
 }
 
-func (v *JSONVisitor) VisitExpression(node *ast.Expression) interface{} {
+func (v *JSONVisitor) VisitExpression(node *ast.Expression) any {
 	var action string
 	fp := node.FieldPath()
 	if fp != nil {
@@ -133,10 +134,8 @@ func (v *JSONVisitor) VisitExpression(node *ast.Expression) interface{} {
 					path, ok := node.Params[0].(*ast.PathExpression)
 					if ok {
 						depth := path.Depth
-						tmpPath := []string{}
-						for _, p := range path.Parts {
-							tmpPath = append(tmpPath, p)
-						}
+						tmpPath := append([]string{}, path.Parts...)
+
 						for _, n := range node.Params[1:] {
 							pe, ok := n.(*ast.PathExpression)
 							if ok {
@@ -158,13 +157,13 @@ func (v *JSONVisitor) VisitExpression(node *ast.Expression) interface{} {
 	return nil
 }
 
-func (v *JSONVisitor) VisitSubExpression(node *ast.SubExpression) interface{} {
+func (v *JSONVisitor) VisitSubExpression(node *ast.SubExpression) any {
 	node.Expression.Accept(v)
 
 	return nil
 }
 
-func (v *JSONVisitor) VisitPath(node *ast.PathExpression) interface{} {
+func (v *JSONVisitor) VisitPath(node *ast.PathExpression) any {
 	if node.Data {
 		data := node.Parts[len(node.Parts)-1]
 		if data == "index" {
@@ -183,29 +182,29 @@ func (v *JSONVisitor) VisitPath(node *ast.PathExpression) interface{} {
 	return nil
 }
 
-func (v *JSONVisitor) VisitString(node *ast.StringLiteral) interface{} {
+func (v *JSONVisitor) VisitString(node *ast.StringLiteral) any {
 	return nil
 }
 
-func (v *JSONVisitor) VisitBoolean(node *ast.BooleanLiteral) interface{} {
+func (v *JSONVisitor) VisitBoolean(node *ast.BooleanLiteral) any {
 	return nil
 }
 
-func (v *JSONVisitor) VisitNumber(node *ast.NumberLiteral) interface{} {
+func (v *JSONVisitor) VisitNumber(node *ast.NumberLiteral) any {
 
 	return nil
 }
 
-func (v *JSONVisitor) VisitHash(node *ast.Hash) interface{} {
+func (v *JSONVisitor) VisitHash(node *ast.Hash) any {
 	return nil
 }
 
-func (v *JSONVisitor) VisitHashPair(node *ast.HashPair) interface{} {
+func (v *JSONVisitor) VisitHashPair(node *ast.HashPair) any {
 	return nil
 }
 
 func (v *JSONVisitor) appendToJSON(templateLabels []string) {
-	var tmp interface{}
+	var tmp any
 	tmp = v.JSON
 	for idx, name := range templateLabels {
 		var onArrayLabel, isArray, isLastLabel bool
@@ -245,7 +244,7 @@ func (v *JSONVisitor) appendToJSON(templateLabels []string) {
 			continue
 		}
 		switch c := tmp.(type) {
-		case map[string]interface{}:
+		case map[string]any:
 			if _, ok := c[name]; !ok {
 				//If the name does not exist in the map
 				//And is the last label.
@@ -267,7 +266,7 @@ func (v *JSONVisitor) appendToJSON(templateLabels []string) {
 					} else {
 						//If the value is not an array and it is not the last value.
 						//It must be a map
-						c[name] = map[string]interface{}{}
+						c[name] = map[string]any{}
 					}
 				}
 			} else {
@@ -284,7 +283,7 @@ func (v *JSONVisitor) appendToJSON(templateLabels []string) {
 					//c[name] had been used in an if or other reference that made us
 					// determine it was a string value. That is false turn it into a map.
 					if !isLastLabel {
-						c[name] = map[string]interface{}{}
+						c[name] = map[string]any{}
 					}
 				}
 			}
@@ -318,27 +317,27 @@ func (v *JSONVisitor) appendToJSON(templateLabels []string) {
 					if isLastLabel {
 						//If already in an array and no string values have been applied above.
 						//Then this indicates a map to end this label resolution
-						c.Add(map[string]interface{}{name: mockStringValue(name)})
+						c.Add(map[string]any{name: mockStringValue(name)})
 					} else {
 						//If not last label and not a future nested array as determined above.
 						//Then make this a map.
-						c.Add(map[string]interface{}{name: map[string]interface{}{}})
+						c.Add(map[string]any{name: map[string]any{}})
 					}
 				} else {
 					//If c.Len is greater than zero we have already added to this array.
 					//The only case that should fall through here is a previously created map.
-					if _, ok := (*c)[0].(map[string]interface{}); ok {
+					if _, ok := (*c)[0].(map[string]any); ok {
 						if isLastLabel {
 							//If this is the last label assign it to the map and mock it's value.
-							(*c)[0].(map[string]interface{})[name] = mockStringValue(name)
+							(*c)[0].(map[string]any)[name] = mockStringValue(name)
 						} else {
 							//If it's not the last label. Add just the map.
-							(*c)[0].(map[string]interface{})[name] = (map[string]interface{}{})
+							(*c)[0].(map[string]any)[name] = (map[string]any{})
 						}
 					}
 				}
 				//If we had to mess with maps assign tmp the map value matching name within the array.
-				tmp = (*c)[0].(map[string]interface{})[name]
+				tmp = (*c)[0].(map[string]any)[name]
 				continue
 			}
 			//Assign tmp to the 0 index of the array. *Note we should never have any arrays larger than a length of 1.

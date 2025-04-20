@@ -37,7 +37,7 @@ func RegisterPartial(name string, source string) {
 	defer partialsMutex.Unlock()
 
 	if partials[name] != nil {
-		panic(fmt.Errorf("Partial already registered: %s", name))
+		panic(fmt.Errorf("partial already registered: %s", name))
 	}
 
 	partials[name] = newPartial(name, source, nil)
@@ -56,7 +56,7 @@ func RegisterPartialTemplate(name string, tpl *Template) {
 	defer partialsMutex.Unlock()
 
 	if partials[name] != nil {
-		panic(fmt.Errorf("Partial already registered: %s", name))
+		panic(fmt.Errorf("partial already registered: %s", name))
 	}
 
 	partials[name] = newPartial(name, "", tpl)

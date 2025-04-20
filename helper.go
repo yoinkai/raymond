@@ -1,7 +1,6 @@
 package raymond
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -15,8 +14,8 @@ type Options struct {
 	eval *evalVisitor
 
 	// params
-	params []interface{}
-	hash   map[string]interface{}
+	params []any
+	hash   map[string]any
 }
 
 var (
@@ -51,12 +50,12 @@ func init() {
 }
 
 // RegisterHelper registers a global helper. That helper will be available to all templates.
-func RegisterHelper(name string, helper interface{}) {
+func RegisterHelper(name string, helper any) {
 	helpersMutex.Lock()
 	defer helpersMutex.Unlock()
 
 	if helpers[name] != zero {
-		panic(fmt.Errorf("Helper already registered: %s", name))
+		panic(fmt.Errorf("helper already registered: %s", name))
 	}
 
 	val := reflect.ValueOf(helper)
@@ -66,7 +65,7 @@ func RegisterHelper(name string, helper interface{}) {
 }
 
 // RegisterHelpers registers several global helpers. Those helpers will be available to all templates.
-func RegisterHelpers(helpers map[string]interface{}) {
+func RegisterHelpers(helpers map[string]any) {
 	for name, helper := range helpers {
 		RegisterHelper(name, helper)
 	}
@@ -91,16 +90,16 @@ func RemoveAllHelpers() {
 // ensureValidHelper panics if given helper is not valid
 func ensureValidHelper(name string, funcValue reflect.Value) {
 	if funcValue.Kind() != reflect.Func {
-		panic(fmt.Errorf("Helper must be a function: %s", name))
+		panic(fmt.Errorf("helper must be a function: %s", name))
 	}
 
 	funcType := funcValue.Type()
 
 	if funcType.NumOut() != 1 {
-		panic(fmt.Errorf("Helper function must return a string or a SafeString: %s", name))
+		panic(fmt.Errorf("helper function must return a string or a SafeString: %s", name))
 	}
 
-	// @todo Check if first returned value is a string, SafeString or interface{} ?
+	// @todo Check if first returned value is a string, SafeString or any ?
 }
 
 // findHelper finds a globally registered helper
@@ -112,7 +111,7 @@ func findHelper(name string) reflect.Value {
 }
 
 // newOptions instanciates a new Options
-func newOptions(eval *evalVisitor, params []interface{}, hash map[string]interface{}) *Options {
+func newOptions(eval *evalVisitor, params []any, hash map[string]any) *Options {
 	return &Options{
 		eval:   eval,
 		params: params,
@@ -124,7 +123,7 @@ func newOptions(eval *evalVisitor, params []interface{}, hash map[string]interfa
 func newEmptyOptions(eval *evalVisitor) *Options {
 	return &Options{
 		eval: eval,
-		hash: make(map[string]interface{}),
+		hash: make(map[string]any),
 	}
 }
 
@@ -133,7 +132,7 @@ func newEmptyOptions(eval *evalVisitor) *Options {
 //
 
 // Value returns field value from current context.
-func (options *Options) Value(name string) interface{} {
+func (options *Options) Value(name string) any {
 	value := options.eval.evalField(options.eval.curCtx(), name, false)
 	if !value.IsValid() {
 		return nil
@@ -148,7 +147,7 @@ func (options *Options) ValueStr(name string) string {
 }
 
 // Ctx returns current evaluation context.
-func (options *Options) Ctx() interface{} {
+func (options *Options) Ctx() any {
 	return options.eval.curCtx().Interface()
 }
 
@@ -157,7 +156,7 @@ func (options *Options) Ctx() interface{} {
 //
 
 // HashProp returns hash property.
-func (options *Options) HashProp(name string) interface{} {
+func (options *Options) HashProp(name string) any {
 	return options.hash[name]
 }
 
@@ -167,7 +166,7 @@ func (options *Options) HashStr(name string) string {
 }
 
 // Hash returns entire hash.
-func (options *Options) Hash() map[string]interface{} {
+func (options *Options) Hash() map[string]any {
 	return options.hash
 }
 
@@ -176,7 +175,7 @@ func (options *Options) Hash() map[string]interface{} {
 //
 
 // Param returns parameter at given position.
-func (options *Options) Param(pos int) interface{} {
+func (options *Options) Param(pos int) any {
 	if len(options.params) > pos {
 		return options.params[pos]
 	}
@@ -190,7 +189,7 @@ func (options *Options) ParamStr(pos int) string {
 }
 
 // Params returns all parameters.
-func (options *Options) Params() []interface{} {
+func (options *Options) Params() []any {
 	return options.params
 }
 
@@ -199,7 +198,7 @@ func (options *Options) Params() []interface{} {
 //
 
 // Data returns private data value.
-func (options *Options) Data(name string) interface{} {
+func (options *Options) Data(name string) any {
 	return options.eval.dataFrame.Get(name)
 }
 
@@ -221,7 +220,7 @@ func (options *Options) NewDataFrame() *DataFrame {
 }
 
 // newIterDataFrame instanciates a new data frame and set iteration specific vars
-func (options *Options) newIterDataFrame(length int, i int, key interface{}) *DataFrame {
+func (options *Options) newIterDataFrame(length int, i int, key any) *DataFrame {
 	return options.eval.dataFrame.newIterDataFrame(length, i, key)
 }
 
@@ -230,7 +229,7 @@ func (options *Options) newIterDataFrame(length int, i int, key interface{}) *Da
 //
 
 // evalBlock evaluates block with given context, private data and iteration key
-func (options *Options) evalBlock(ctx interface{}, data *DataFrame, key interface{}) string {
+func (options *Options) evalBlock(ctx any, data *DataFrame, key any) string {
 	result := ""
 
 	if block := options.eval.curBlock(); (block != nil) && (block.Program != nil) {
@@ -246,12 +245,12 @@ func (options *Options) Fn() string {
 }
 
 // FnCtxData evaluates block with given context and private data frame.
-func (options *Options) FnCtxData(ctx interface{}, data *DataFrame) string {
+func (options *Options) FnCtxData(ctx any, data *DataFrame) string {
 	return options.evalBlock(ctx, data, nil)
 }
 
 // FnWith evaluates block with given context.
-func (options *Options) FnWith(ctx interface{}) string {
+func (options *Options) FnWith(ctx any) string {
 	return options.evalBlock(ctx, nil, nil)
 }
 
@@ -271,7 +270,7 @@ func (options *Options) Inverse() string {
 }
 
 // Eval evaluates field for given context.
-func (options *Options) Eval(ctx interface{}, field string) interface{} {
+func (options *Options) Eval(ctx any, field string) any {
 	if ctx == nil {
 		return nil
 	}
@@ -310,7 +309,7 @@ func (options *Options) isIncludableZero() bool {
 //
 
 // #if block helper
-func ifHelper(conditional interface{}, options *Options) interface{} {
+func ifHelper(conditional any, options *Options) any {
 	if options.isIncludableZero() || IsTrue(conditional) {
 		return options.Fn()
 	}
@@ -318,7 +317,7 @@ func ifHelper(conditional interface{}, options *Options) interface{} {
 	return options.Inverse()
 }
 
-func ifGtHelper(a, b interface{}, options *Options) interface{} {
+func ifGtHelper(a, b any, options *Options) any {
 	var aFloat, bFloat float64
 	var err error
 
@@ -338,7 +337,7 @@ func ifGtHelper(a, b interface{}, options *Options) interface{} {
 	return options.Inverse()
 }
 
-func ifLtHelper(a, b interface{}, options *Options) interface{} {
+func ifLtHelper(a, b any, options *Options) any {
 	var aFloat, bFloat float64
 	var err error
 
@@ -358,7 +357,7 @@ func ifLtHelper(a, b interface{}, options *Options) interface{} {
 	return options.Inverse()
 }
 
-func ifEqHelper(a, b interface{}, options *Options) interface{} {
+func ifEqHelper(a, b any, options *Options) any {
 	var aFloat, bFloat float64
 	var err error
 
@@ -380,7 +379,7 @@ func ifEqHelper(a, b interface{}, options *Options) interface{} {
 
 // ifMatchesRegexStr is helper function which does a regex match, where a is the expression to compile and
 // b is the string to match against.
-func ifMatchesRegexStr(a, b interface{}, options *Options) interface{} {
+func ifMatchesRegexStr(a, b any, options *Options) any {
 	exp := Str(a)
 	match := Str(b)
 
@@ -396,7 +395,7 @@ func ifMatchesRegexStr(a, b interface{}, options *Options) interface{} {
 	return options.Inverse()
 }
 
-func pluralizeHelper(count, plural, singular interface{}) interface{} {
+func pluralizeHelper(count, plural, singular any) any {
 	if c, err := floatValue(count); err != nil || c <= 1 {
 		return singular
 	}
@@ -404,7 +403,7 @@ func pluralizeHelper(count, plural, singular interface{}) interface{} {
 }
 
 // #unless block helper
-func unlessHelper(conditional interface{}, options *Options) interface{} {
+func unlessHelper(conditional any, options *Options) any {
 	if options.isIncludableZero() || IsTrue(conditional) {
 		return options.Inverse()
 	}
@@ -413,7 +412,7 @@ func unlessHelper(conditional interface{}, options *Options) interface{} {
 }
 
 // #with block helper
-func withHelper(context interface{}, options *Options) interface{} {
+func withHelper(context any, options *Options) any {
 	if IsTrue(context) {
 		return options.FnWith(context)
 	}
@@ -422,7 +421,7 @@ func withHelper(context interface{}, options *Options) interface{} {
 }
 
 // #each block helper
-func eachHelper(context interface{}, options *Options) interface{} {
+func eachHelper(context any, options *Options) any {
 	if !IsTrue(context) {
 		return options.Inverse()
 	}
@@ -478,19 +477,19 @@ func eachHelper(context interface{}, options *Options) interface{} {
 }
 
 // #log helper
-func logHelper(message string) interface{} {
+func logHelper(message string) any {
 	log.Print(message)
 	return ""
 }
 
 // #lookup helper
-func lookupHelper(obj interface{}, field string, options *Options) interface{} {
+func lookupHelper(obj any, field string, options *Options) any {
 	return Str(options.Eval(obj, field))
 }
 
 // #equal helper
 // Ref: https://github.com/aymerick/raymond/issues/7
-func equalHelper(a interface{}, b interface{}, options *Options) interface{} {
+func equalHelper(a any, b any, options *Options) any {
 	if Str(a) == Str(b) {
 		return options.Fn()
 	}
@@ -499,7 +498,7 @@ func equalHelper(a interface{}, b interface{}, options *Options) interface{} {
 }
 
 // floatValue attempts to convert value into a float64 and returns an error if it fails.
-func floatValue(value interface{}) (result float64, err error) {
+func floatValue(value any) (result float64, err error) {
 	val := reflect.ValueOf(value)
 
 	switch val.Kind() {
@@ -517,7 +516,7 @@ func floatValue(value interface{}) (result float64, err error) {
 	case reflect.String:
 		result, err = strconv.ParseFloat(val.String(), 64)
 	default:
-		err = errors.New(fmt.Sprintf("uable to convert type '%s' to float64", val.Kind().String()))
+		err = fmt.Errorf("unable to convert type '%s' to float64", val.Kind().String())
 	}
 	return
 }

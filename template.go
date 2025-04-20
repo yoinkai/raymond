@@ -2,13 +2,13 @@ package raymond
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"reflect"
 	"runtime"
 	"sync"
 
-	"github.com/mailgun/raymond/v2/ast"
-	"github.com/mailgun/raymond/v2/parser"
+	"github.com/yoinkai/raymond/v2/ast"
+	"github.com/yoinkai/raymond/v2/parser"
 )
 
 // Template represents a handlebars template.
@@ -52,7 +52,7 @@ func MustParse(source string) *Template {
 
 // ParseFile reads given file and returns parsed template.
 func ParseFile(filePath string) (*Template, error) {
-	b, err := ioutil.ReadFile(filePath)
+	b, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -104,12 +104,12 @@ func (tpl *Template) findHelper(name string) reflect.Value {
 }
 
 // RegisterHelper registers a helper for that template.
-func (tpl *Template) RegisterHelper(name string, helper interface{}) {
+func (tpl *Template) RegisterHelper(name string, helper any) {
 	tpl.mutex.Lock()
 	defer tpl.mutex.Unlock()
 
 	if tpl.helpers[name] != zero {
-		panic(fmt.Sprintf("Helper %s already registered", name))
+		panic(fmt.Sprintf("helper %s already registered", name))
 	}
 
 	val := reflect.ValueOf(helper)
@@ -119,7 +119,7 @@ func (tpl *Template) RegisterHelper(name string, helper interface{}) {
 }
 
 // RegisterHelpers registers several helpers for that template.
-func (tpl *Template) RegisterHelpers(helpers map[string]interface{}) {
+func (tpl *Template) RegisterHelpers(helpers map[string]any) {
 	for name, helper := range helpers {
 		tpl.RegisterHelper(name, helper)
 	}
@@ -130,7 +130,7 @@ func (tpl *Template) addPartial(name string, source string, template *Template) 
 	defer tpl.mutex.Unlock()
 
 	if tpl.partials[name] != nil {
-		panic(fmt.Sprintf("Partial %s already registered", name))
+		panic(fmt.Sprintf("partial %s already registered", name))
 	}
 
 	tpl.partials[name] = newPartial(name, source, template)
@@ -157,7 +157,7 @@ func (tpl *Template) RegisterPartials(partials map[string]string) {
 
 // RegisterPartialFile reads given file and registers its content as a partial with given name.
 func (tpl *Template) RegisterPartialFile(filePath string, name string) error {
-	b, err := ioutil.ReadFile(filePath)
+	b, err := os.ReadFile(filePath)
 	if err != nil {
 		return err
 	}
@@ -190,12 +190,12 @@ func (tpl *Template) RegisterPartialTemplate(name string, template *Template) {
 }
 
 // Exec evaluates template with given context.
-func (tpl *Template) Exec(ctx interface{}) (result string, err error) {
+func (tpl *Template) Exec(ctx any) (result string, err error) {
 	return tpl.ExecWith(ctx, nil)
 }
 
 // MustExec evaluates template with given context. It panics on error.
-func (tpl *Template) MustExec(ctx interface{}) string {
+func (tpl *Template) MustExec(ctx any) string {
 	result, err := tpl.Exec(ctx)
 	if err != nil {
 		panic(err)
@@ -204,7 +204,7 @@ func (tpl *Template) MustExec(ctx interface{}) string {
 }
 
 // ExecWith evaluates template with given context and private data frame.
-func (tpl *Template) ExecWith(ctx interface{}, privData *DataFrame) (result string, err error) {
+func (tpl *Template) ExecWith(ctx any, privData *DataFrame) (result string, err error) {
 	defer errRecover(&err)
 
 	// parses template if necessary
@@ -223,7 +223,7 @@ func (tpl *Template) ExecWith(ctx interface{}, privData *DataFrame) (result stri
 	return
 }
 
-func (tpl *Template) ExtractTemplateVars() (result map[string]interface{}, err error) {
+func (tpl *Template) ExtractTemplateVars() (result map[string]any, err error) {
 	defer errRecover(&err)
 
 	// parses template if necessary
@@ -236,7 +236,7 @@ func (tpl *Template) ExtractTemplateVars() (result map[string]interface{}, err e
 	v := newJSONVisitor()
 
 	// visit AST
-	result, _ = tpl.program.Accept(v).(map[string]interface{})
+	result, _ = tpl.program.Accept(v).(map[string]any)
 
 	// named return values
 	return

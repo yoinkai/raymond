@@ -23,33 +23,33 @@ type Node interface {
 	String() string
 
 	// accepts visitor
-	Accept(Visitor) interface{}
+	Accept(Visitor) any
 }
 
 // Visitor is the interface to visit an AST.
 type Visitor interface {
-	VisitProgram(*Program) interface{}
+	VisitProgram(*Program) any
 
 	// statements
-	VisitMustache(*MustacheStatement) interface{}
-	VisitBlock(*BlockStatement) interface{}
-	VisitPartial(*PartialStatement) interface{}
-	VisitContent(*ContentStatement) interface{}
-	VisitComment(*CommentStatement) interface{}
+	VisitMustache(*MustacheStatement) any
+	VisitBlock(*BlockStatement) any
+	VisitPartial(*PartialStatement) any
+	VisitContent(*ContentStatement) any
+	VisitComment(*CommentStatement) any
 
 	// expressions
-	VisitExpression(*Expression) interface{}
-	VisitSubExpression(*SubExpression) interface{}
-	VisitPath(*PathExpression) interface{}
+	VisitExpression(*Expression) any
+	VisitSubExpression(*SubExpression) any
+	VisitPath(*PathExpression) any
 
 	// literals
-	VisitString(*StringLiteral) interface{}
-	VisitBoolean(*BooleanLiteral) interface{}
-	VisitNumber(*NumberLiteral) interface{}
+	VisitString(*StringLiteral) any
+	VisitBoolean(*BooleanLiteral) any
+	VisitNumber(*NumberLiteral) any
 
 	// miscellaneous
-	VisitHash(*Hash) interface{}
-	VisitHashPair(*HashPair) interface{}
+	VisitHash(*Hash) any
+	VisitHashPair(*HashPair) any
 }
 
 // NodeType represents an AST Node type.
@@ -177,7 +177,7 @@ func (node *Program) String() string {
 }
 
 // Accept is the receiver entry point for visitors.
-func (node *Program) Accept(visitor Visitor) interface{} {
+func (node *Program) Accept(visitor Visitor) any {
 	return visitor.VisitProgram(node)
 }
 
@@ -217,7 +217,7 @@ func (node *MustacheStatement) String() string {
 }
 
 // Accept is the receiver entry point for visitors.
-func (node *MustacheStatement) Accept(visitor Visitor) interface{} {
+func (node *MustacheStatement) Accept(visitor Visitor) any {
 	return visitor.VisitMustache(node)
 }
 
@@ -255,7 +255,7 @@ func (node *BlockStatement) String() string {
 }
 
 // Accept is the receiver entry point for visitors.
-func (node *BlockStatement) Accept(visitor Visitor) interface{} {
+func (node *BlockStatement) Accept(visitor Visitor) any {
 	return visitor.VisitBlock(node)
 }
 
@@ -291,7 +291,7 @@ func (node *PartialStatement) String() string {
 }
 
 // Accept is the receiver entry point for visitors.
-func (node *PartialStatement) Accept(visitor Visitor) interface{} {
+func (node *PartialStatement) Accept(visitor Visitor) any {
 	return visitor.VisitPartial(node)
 }
 
@@ -329,7 +329,7 @@ func (node *ContentStatement) String() string {
 }
 
 // Accept is the receiver entry point for visitors.
-func (node *ContentStatement) Accept(visitor Visitor) interface{} {
+func (node *ContentStatement) Accept(visitor Visitor) any {
 	return visitor.VisitContent(node)
 }
 
@@ -364,7 +364,7 @@ func (node *CommentStatement) String() string {
 }
 
 // Accept is the receiver entry point for visitors.
-func (node *CommentStatement) Accept(visitor Visitor) interface{} {
+func (node *CommentStatement) Accept(visitor Visitor) any {
 	return visitor.VisitComment(node)
 }
 
@@ -396,7 +396,7 @@ func (node *Expression) String() string {
 }
 
 // Accept is the receiver entry point for visitors.
-func (node *Expression) Accept(visitor Visitor) interface{} {
+func (node *Expression) Accept(visitor Visitor) any {
 	return visitor.VisitExpression(node)
 }
 
@@ -514,7 +514,7 @@ func (node *SubExpression) String() string {
 }
 
 // Accept is the receiver entry point for visitors.
-func (node *SubExpression) Accept(visitor Visitor) interface{} {
+func (node *SubExpression) Accept(visitor Visitor) any {
 	return visitor.VisitSubExpression(node)
 }
 
@@ -556,7 +556,7 @@ func (node *PathExpression) String() string {
 }
 
 // Accept is the receiver entry point for visitors.
-func (node *PathExpression) Accept(visitor Visitor) interface{} {
+func (node *PathExpression) Accept(visitor Visitor) any {
 	return visitor.VisitPath(node)
 }
 
@@ -613,7 +613,7 @@ func (node *StringLiteral) String() string {
 }
 
 // Accept is the receiver entry point for visitors.
-func (node *StringLiteral) Accept(visitor Visitor) interface{} {
+func (node *StringLiteral) Accept(visitor Visitor) any {
 	return visitor.VisitString(node)
 }
 
@@ -647,7 +647,7 @@ func (node *BooleanLiteral) String() string {
 }
 
 // Accept is the receiver entry point for visitors.
-func (node *BooleanLiteral) Accept(visitor Visitor) interface{} {
+func (node *BooleanLiteral) Accept(visitor Visitor) any {
 	return visitor.VisitBoolean(node)
 }
 
@@ -692,7 +692,7 @@ func (node *NumberLiteral) String() string {
 }
 
 // Accept is the receiver entry point for visitors.
-func (node *NumberLiteral) Accept(visitor Visitor) interface{} {
+func (node *NumberLiteral) Accept(visitor Visitor) any {
 	return visitor.VisitNumber(node)
 }
 
@@ -706,7 +706,7 @@ func (node *NumberLiteral) Canonical() string {
 }
 
 // Number returns an integer or a float.
-func (node *NumberLiteral) Number() interface{} {
+func (node *NumberLiteral) Number() any {
 	if node.IsInt {
 		return int(node.Value)
 	}
@@ -749,7 +749,7 @@ func (node *Hash) String() string {
 }
 
 // Accept is the receiver entry point for visitors.
-func (node *Hash) Accept(visitor Visitor) interface{} {
+func (node *Hash) Accept(visitor Visitor) any {
 	return visitor.VisitHash(node)
 }
 
@@ -780,6 +780,6 @@ func (node *HashPair) String() string {
 }
 
 // Accept is the receiver entry point for visitors.
-func (node *HashPair) Accept(visitor Visitor) interface{} {
+func (node *HashPair) Accept(visitor Visitor) any {
 	return visitor.VisitHashPair(node)
 }

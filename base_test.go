@@ -9,11 +9,11 @@ import (
 type Test struct {
 	name     string
 	input    string
-	data     interface{}
-	privData map[string]interface{}
-	helpers  map[string]interface{}
+	data     any
+	privData map[string]any
+	helpers  map[string]any
 	partials map[string]string
-	output   interface{}
+	output   any
 }
 
 func launchTests(t *testing.T, tests []Test) {

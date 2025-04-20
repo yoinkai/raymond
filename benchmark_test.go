@@ -17,7 +17,7 @@ func BenchmarkArguments(b *testing.B) {
 	}
 
 	tpl := MustParse(source)
-	tpl.RegisterHelper("foo", func(a, b, c, d interface{}) string { return "" })
+	tpl.RegisterHelper("foo", func(a, b, c, d any) string { return "" })
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -82,10 +82,10 @@ func BenchmarkComplex(b *testing.B) {
 {{/if}}
 `
 
-	ctx := map[string]interface{}{
+	ctx := map[string]any{
 		"header":   func() string { return "Colors" },
 		"hasItems": true,
-		"items": []map[string]interface{}{
+		"items": []map[string]any{
 			{"name": "red", "current": true, "url": "#Red"},
 			{"name": "green", "current": false, "url": "#Green"},
 			{"name": "blue", "current": false, "url": "#Blue"},
@@ -123,7 +123,7 @@ func BenchmarkData(b *testing.B) {
 func BenchmarkDepth1(b *testing.B) {
 	source := `{{#each names}}{{../foo}}{{/each}}`
 
-	ctx := map[string]interface{}{
+	ctx := map[string]any{
 		"names": []map[string]string{
 			{"name": "Moe"},
 			{"name": "Larry"},
@@ -144,8 +144,8 @@ func BenchmarkDepth1(b *testing.B) {
 func BenchmarkDepth2(b *testing.B) {
 	source := `{{#each names}}{{#each name}}{{../bat}}{{../../foo}}{{/each}}{{/each}}`
 
-	ctx := map[string]interface{}{
-		"names": []map[string]interface{}{
+	ctx := map[string]any{
+		"names": []map[string]any{
 			{"bat": "foo", "name": []string{"Moe"}},
 			{"bat": "foo", "name": []string{"Larry"}},
 			{"bat": "foo", "name": []string{"Curly"}},
@@ -165,8 +165,8 @@ func BenchmarkDepth2(b *testing.B) {
 func BenchmarkObjectMustache(b *testing.B) {
 	source := `{{#person}}{{name}}{{age}}{{/person}}`
 
-	ctx := map[string]interface{}{
-		"person": map[string]interface{}{
+	ctx := map[string]any{
+		"person": map[string]any{
 			"name": "Larry",
 			"age":  45,
 		},
@@ -183,8 +183,8 @@ func BenchmarkObjectMustache(b *testing.B) {
 func BenchmarkObject(b *testing.B) {
 	source := `{{#with person}}{{name}}{{age}}{{/with}}`
 
-	ctx := map[string]interface{}{
-		"person": map[string]interface{}{
+	ctx := map[string]any{
+		"person": map[string]any{
 			"name": "Larry",
 			"age":  45,
 		},
@@ -201,15 +201,15 @@ func BenchmarkObject(b *testing.B) {
 func BenchmarkPartialRecursion(b *testing.B) {
 	source := `{{name}}{{#each kids}}{{>recursion}}{{/each}}`
 
-	ctx := map[string]interface{}{
+	ctx := map[string]any{
 		"name": 1,
-		"kids": []map[string]interface{}{
+		"kids": []map[string]any{
 			{
 				"name": "1.1",
-				"kids": []map[string]interface{}{
+				"kids": []map[string]any{
 					{
 						"name": "1.1.1",
-						"kids": []map[string]interface{}{},
+						"kids": []map[string]any{},
 					},
 				},
 			},
@@ -230,8 +230,8 @@ func BenchmarkPartialRecursion(b *testing.B) {
 func BenchmarkPartial(b *testing.B) {
 	source := `{{#each peeps}}{{>variables}}{{/each}}`
 
-	ctx := map[string]interface{}{
-		"peeps": []map[string]interface{}{
+	ctx := map[string]any{
+		"peeps": []map[string]any{
 			{"name": "Moe", "count": 15},
 			{"name": "Moe", "count": 5},
 			{"name": "Curly", "count": 1},
@@ -252,9 +252,9 @@ func BenchmarkPartial(b *testing.B) {
 func BenchmarkPath(b *testing.B) {
 	source := `{{person.name.bar.baz}}{{person.age}}{{person.foo}}{{animal.age}}`
 
-	ctx := map[string]interface{}{
-		"person": map[string]interface{}{
-			"name": map[string]interface{}{
+	ctx := map[string]any{
+		"person": map[string]any{
+			"name": map[string]any{
 				"bar": map[string]string{
 					"baz": "Larry",
 				},
@@ -285,10 +285,10 @@ func BenchmarkString(b *testing.B) {
 func BenchmarkSubExpression(b *testing.B) {
 	source := `{{echo (header)}}`
 
-	ctx := map[string]interface{}{}
+	ctx := map[string]any{}
 
 	tpl := MustParse(source)
-	tpl.RegisterHelpers(map[string]interface{}{
+	tpl.RegisterHelpers(map[string]any{
 		"echo":   func(v string) string { return "foo " + v },
 		"header": func() string { return "Colors" },
 	})
@@ -302,7 +302,7 @@ func BenchmarkSubExpression(b *testing.B) {
 func BenchmarkVariables(b *testing.B) {
 	source := `Hello {{name}}! You have {{count}} new messages.`
 
-	ctx := map[string]interface{}{
+	ctx := map[string]any{
 		"name":  "Mick",
 		"count": 30,
 	}

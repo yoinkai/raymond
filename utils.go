@@ -23,7 +23,7 @@ func indirect(v reflect.Value) (rv reflect.Value, isNil bool) {
 }
 
 // IsTrue returns true if obj is a truthy value.
-func IsTrue(obj interface{}) bool {
+func IsTrue(obj any) bool {
 	thruth, ok := isTrueValue(reflect.ValueOf(obj))
 	if !ok {
 		return false
@@ -37,7 +37,7 @@ func IsTrue(obj interface{}) bool {
 // NOTE: borrowed from https://github.com/golang/go/tree/master/src/text/template/exec.go
 func isTrueValue(val reflect.Value) (truth, ok bool) {
 	if !val.IsValid() {
-		// Something like var x interface{}, never set. It's a form of nil.
+		// Something like var x any, never set. It's a form of nil.
 		return false, true
 	}
 	switch val.Kind() {

@@ -1,7 +1,7 @@
 package raymond
 
 import (
-	"io/ioutil"
+	"os"
 	"path"
 	"regexp"
 	"strings"
@@ -19,7 +19,7 @@ import (
 type mustacheTest struct {
 	Name     string
 	Desc     string
-	Data     interface{}
+	Data     any
 	Template string
 	Expected string
 	Partials map[string]string
@@ -58,7 +58,7 @@ func testsFromMustacheFile(fileName string) []Test {
 	result := []Test{}
 
 	// These files are pulled in from https://github.com/mustache/spec/tree/83b0721610a4e11832e83df19c73ace3289972b9
-	fileData, err := ioutil.ReadFile(path.Join("mustache", "specs", fileName))
+	fileData, err := os.ReadFile(path.Join("mustache", "specs", fileName))
 	if err != nil {
 		panic(err)
 	}
@@ -116,7 +116,7 @@ func haveAltDelimiter(test mustacheTest) bool {
 func mustacheTestFiles() []string {
 	var result []string
 
-	files, err := ioutil.ReadDir(path.Join("mustache", "specs"))
+	files, err := os.ReadDir(path.Join("mustache", "specs"))
 	if err != nil {
 		panic(err)
 	}
@@ -140,7 +140,7 @@ var mustacheLambdasTests = []Test{
 	{
 		"Interpolation",
 		"Hello, {{lambda}}!",
-		map[string]interface{}{"lambda": func() string { return "world" }},
+		map[string]any{"lambda": func() string { return "world" }},
 		nil, nil, nil,
 		"Hello, world!",
 	},
@@ -149,7 +149,7 @@ var mustacheLambdasTests = []Test{
 	// {
 	// 	"Interpolation - Expansion",
 	// 	"Hello, {{lambda}}!",
-	// 	map[string]interface{}{"lambda": func() string { return "{{planet}}" }},
+	// 	map[string]any{"lambda": func() string { return "{{planet}}" }},
 	// 	nil, nil, nil,
 	// 	"Hello, world!",
 	// },
@@ -159,7 +159,7 @@ var mustacheLambdasTests = []Test{
 	{
 		"Interpolation - Multiple Calls",
 		"{{lambda}} == {{{lambda}}} == {{lambda}}",
-		map[string]interface{}{"lambda": func() string {
+		map[string]any{"lambda": func() string {
 			musTestLambdaInterMult++
 			return Str(musTestLambdaInterMult)
 		}},
@@ -170,7 +170,7 @@ var mustacheLambdasTests = []Test{
 	{
 		"Escaping",
 		"<{{lambda}}{{{lambda}}}",
-		map[string]interface{}{"lambda": func() string { return ">" }},
+		map[string]any{"lambda": func() string { return ">" }},
 		nil, nil, nil,
 		"<&gt;>",
 	},
@@ -179,7 +179,7 @@ var mustacheLambdasTests = []Test{
 	// {
 	// 	"Section",
 	// 	"<{{#lambda}}{{x}}{{/lambda}}>",
-	// 	map[string]interface{}{"lambda": func(param string) string {
+	// 	map[string]any{"lambda": func(param string) string {
 	// 		if param == "{{x}}" {
 	// 			return "yes"
 	// 		}
@@ -194,7 +194,7 @@ var mustacheLambdasTests = []Test{
 	// {
 	// 	"Section - Expansion",
 	// 	"<{{#lambda}}-{{/lambda}}>",
-	// 	map[string]interface{}{"lambda": func(param string) string {
+	// 	map[string]any{"lambda": func(param string) string {
 	// 		return param + "{{planet}}" + param
 	// 	}, "planet": "Earth"},
 	// 	nil, nil, nil,
@@ -206,7 +206,7 @@ var mustacheLambdasTests = []Test{
 	{
 		"Section - Multiple Calls",
 		"{{#lambda}}FILE{{/lambda}} != {{#lambda}}LINE{{/lambda}}",
-		map[string]interface{}{"lambda": func(options *Options) string {
+		map[string]any{"lambda": func(options *Options) string {
 			return "__" + options.Fn() + "__"
 		}},
 		nil, nil, nil,
@@ -217,8 +217,8 @@ var mustacheLambdasTests = []Test{
 	// {
 	// 	"Inverted Section",
 	// 	"<{{^lambda}}{{static}}{{/lambda}}>",
-	// 	map[string]interface{}{
-	// 		"lambda": func() interface{} {
+	// 	map[string]any{
+	// 		"lambda": func() any {
 	// 			return false
 	// 		},
 	// 		"static": "static",

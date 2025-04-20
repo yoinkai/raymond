@@ -31,22 +31,22 @@ func (h *handlebarsContext) GetCurrentContextString() string {
 	return h.GetParentContextString(0)
 }
 
-func (h *handlebarsContext) GetParentContext(num_ancestors int) []string {
+func (h *handlebarsContext) GetParentContext(numAncestors int) []string {
 	if len(h.contextMembers) == 0 {
 		return []string{}
 	}
-	return strings.Split(h.GetParentContextString(num_ancestors), ".")
+	return strings.Split(h.GetParentContextString(numAncestors), ".")
 }
 
-func (h *handlebarsContext) GetParentContextString(num_ancestors int) string {
+func (h *handlebarsContext) GetParentContextString(numAncestors int) string {
 	if len(h.contextMembers) == 0 {
 		return ""
 	}
-	if num_ancestors > len(h.contextMembers) {
-		num_ancestors = 0
+	if numAncestors > len(h.contextMembers) {
+		numAncestors = 0
 	}
 	var res string
-	for _, val := range h.contextMembers[:len(h.contextMembers)-num_ancestors] {
+	for _, val := range h.contextMembers[:len(h.contextMembers)-numAncestors] {
 		if len(res) == 0 {
 			res = val.path
 		} else {
@@ -62,11 +62,11 @@ func (h *handlebarsContext) MoveUpContext() {
 	}
 }
 
-func (h *handlebarsContext) HaveAsContexts(num_ancestors int) bool {
-	if num_ancestors > len(h.contextMembers) {
-		num_ancestors = 0
+func (h *handlebarsContext) HaveAsContexts(numAncestors int) bool {
+	if numAncestors > len(h.contextMembers) {
+		numAncestors = 0
 	}
-	for val := range h.contextMembers[:len(h.contextMembers)-num_ancestors] {
+	for val := range h.contextMembers[:len(h.contextMembers)-numAncestors] {
 		if h.contextMembers[val].asMapping != "" {
 			return true
 		}
@@ -74,33 +74,33 @@ func (h *handlebarsContext) HaveAsContexts(num_ancestors int) bool {
 	return false
 }
 
-func (h *handlebarsContext) GetMappedContext(path []string, num_ancestors int) []string {
+func (h *handlebarsContext) GetMappedContext(path []string, numAncestors int) []string {
 	if len(path) == 0 {
 		return []string{}
 	}
-	return strings.Split(h.GetMappedContextString(path, num_ancestors), ".")
+	return strings.Split(h.GetMappedContextString(path, numAncestors), ".")
 }
 
-func (h *handlebarsContext) GetMappedContextString(path []string, num_ancestors int) string {
+func (h *handlebarsContext) GetMappedContextString(path []string, numAncestors int) string {
 	if len(h.contextMembers) == 0 {
 		return strings.Join(path, ".")
 	}
-	if num_ancestors > len(h.contextMembers) {
-		num_ancestors = 0
+	if numAncestors > len(h.contextMembers) {
+		numAncestors = 0
 	}
-	if !h.HaveAsContexts(num_ancestors) {
+	if !h.HaveAsContexts(numAncestors) {
 		var res string
 		if path[0] == "" {
-			res = h.GetParentContextString(num_ancestors)
+			res = h.GetParentContextString(numAncestors)
 		} else {
-			res = h.GetParentContextString(num_ancestors) + "." + strings.Join(path, ".")
+			res = h.GetParentContextString(numAncestors) + "." + strings.Join(path, ".")
 		}
 		return strings.Trim(res, ".")
 	}
 	var res string
 	copiedMembers := make([]contextMember, 0)
-	if num_ancestors > 0 {
-		copiedMembers = append(copiedMembers, h.contextMembers[:len(h.contextMembers)-num_ancestors]...)
+	if numAncestors > 0 {
+		copiedMembers = append(copiedMembers, h.contextMembers[:len(h.contextMembers)-numAncestors]...)
 	} else {
 		copiedMembers = append(copiedMembers, h.contextMembers...)
 	}
@@ -130,7 +130,6 @@ func (h *handlebarsContext) GetMappedContextString(path []string, num_ancestors 
 						ss := strings.Split(val.asMapping, ".")
 						if ss[0] == path[p] {
 							found = val.path
-						} else {
 						}
 					} else {
 						if len(copiedMembers) > 1 {
