@@ -7,8 +7,6 @@ import (
 	"strconv"
 	"testing"
 
-	"slices"
-
 	"github.com/yoinkai/raymond/v2"
 )
 
@@ -75,7 +73,13 @@ func launchTests(t *testing.T, tests []Test) {
 				var expectedArr []string
 				expectedArr, ok := test.output.([]string)
 				if ok {
-					match := slices.Contains(expectedArr, output)
+					match := false
+					for _, expectedStr := range expectedArr {
+						if expectedStr == output {
+							match = true
+							break
+						}
+					}
 
 					if !match {
 						t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\npartials:\n\t%s\nexpected\n\t%q\ngot\n\t%q\nAST:\n%s", test.name, test.input, raymond.Str(test.data), raymond.Str(test.partials), expectedArr, output, tpl.PrintAST())

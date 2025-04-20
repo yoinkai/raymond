@@ -37,7 +37,7 @@ func strValue(value reflect.Value) string {
 
 	switch val.Kind() {
 	case reflect.Array, reflect.Slice:
-		for i := range val.Len() {
+		for i := 0; i < val.Len(); i++ {
 			result += strValue(val.Index(i))
 		}
 	case reflect.Bool:

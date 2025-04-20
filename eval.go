@@ -600,6 +600,12 @@ func (v *evalVisitor) callFunc(name string, funcVal reflect.Value, options *Opti
 	numIn := funcType.NumIn()
 	variadic := funcType.IsVariadic()
 
+	// compute how many variadic args; ensure non-negative without using Go1.21 built-in max
+	vaCount := len(params) - numIn
+	if vaCount < 0 {
+		vaCount = 0
+	}
+
 	if numIn == len(params)+1 {
 		lastArgType := funcType.In(numIn - 1)
 		if reflect.TypeOf(options).AssignableTo(lastArgType) {
@@ -610,8 +616,6 @@ func (v *evalVisitor) callFunc(name string, funcVal reflect.Value, options *Opti
 	if !addOptions && (len(params) != numIn && !variadic) {
 		v.errorf("helper '%s' called with wrong number of arguments, needed %d but got %d", name, numIn, len(params))
 	}
-
-	vaCount := max(len(params)-numIn, 0)
 
 	// check and collect arguments
 	args := make([]reflect.Value, 0, numIn+vaCount)
