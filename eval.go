@@ -611,13 +611,10 @@ func (v *evalVisitor) callFunc(name string, funcVal reflect.Value, options *Opti
 		v.errorf("helper '%s' called with wrong number of arguments, needed %d but got %d", name, numIn, len(params))
 	}
 
-	vaCount := len(params) - numIn
-	if vaCount < 0 {
-		vaCount = 0
-	}
+	vaCount := max(len(params)-numIn, 0)
 
 	// check and collect arguments
-	args := make([]reflect.Value, numIn+vaCount)
+	args := make([]reflect.Value, 0, numIn+vaCount)
 	for i, param := range params {
 		arg := reflect.ValueOf(param)
 		var argType reflect.Type
@@ -652,11 +649,11 @@ func (v *evalVisitor) callFunc(name string, funcVal reflect.Value, options *Opti
 			}
 		}
 
-		args[i] = arg
+		args = append(args, arg)
 	}
 
 	if addOptions {
-		args[numIn+vaCount-1] = reflect.ValueOf(options)
+		args = append(args, reflect.ValueOf(options))
 	}
 
 	result := funcVal.Call(args)
